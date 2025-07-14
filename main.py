@@ -13,6 +13,7 @@ employers = []
 
 
 def create_database(name_db):
+    """Создание базы данных """
     params = config()
     conn = psycopg2.connect(**params)
     conn.autocommit = True
@@ -26,6 +27,7 @@ def create_database(name_db):
 
 
 def create_tables(name_db):
+    """Создание таблиц с компаниями и вакансиями"""
     params = config()
     conn = psycopg2.connect(dbname=name_db, **params)
     with conn:
@@ -48,6 +50,7 @@ def create_tables(name_db):
 
 
 def insert_tables(name_db):
+    """Заполнение таблицы данными """
     hh_parser = HHParser()
     employers = hh_parser.get_employers()
     params = config()
@@ -61,6 +64,7 @@ def insert_tables(name_db):
 
 
 def insert_tables_2(name_db):
+    """Заполнение таблицы данными """
     hh_parser = HHParser()
     vacancies = hh_parser.get_all_vacancies_by_employers()
     params = config()

@@ -15,12 +15,12 @@ EMPLOYER_IDS = [
 
 
 class HHParser:
-    """"""
     def __init__(self):
         self.__url_employer = 'https://api.hh.ru/employers'
         self.__url_vacancies = 'https://api.hh.ru/vacancies'
 
     def get_employers(self):
+        """Получение  списка компания"""
         params = {"sort_by": "by_vacancies_open", "per_page": 10}
         try:
             response = requests.get(self.__url_employer, params=params)
@@ -32,11 +32,13 @@ class HHParser:
             return []
 
     def get_vacancies_by_employer(self, employer_id):
+        """Получение вакансий по id  компании"""
         params = {"employer_id": employer_id, "per_page": 50}
         response = requests.get(self.__url_vacancies, params=params).json()["items"]
         return response
 
     def get_all_vacancies_by_employers(self):
+        """Получение всех ваканский"""
         employers = self.get_employers()
         all_vacancies = []
         for employer in employers:
@@ -46,6 +48,7 @@ class HHParser:
 
     @staticmethod
     def filter_vacancy(vacancy):
+        """Фильтрация вывода ваканский с данными"""
         if vacancy["salary"]:
             salary_from = vacancy["salary"]["from"] if vacancy["salary"]["from"] else 0
             salary_to = vacancy["salary"]["to"] if vacancy["salary"]["to"] else 0
