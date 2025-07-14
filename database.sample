@@ -1,4 +1,5 @@
-NAME=
+[postgresql]
+DBNAME=
 USER=
 PASSWORD=
 PORT=
