@@ -37,16 +37,16 @@ class DBManager:
             return cur.fetchone()[0]
 
     def get_vacancies_with_higher_salary(self) -> List[Tuple[str, str, float, str]]:
-        """ получает список всех вакансий, у которых зарплата выше средней по всем вакансиям. """
-
+        """Получает список вакансий с зарплатой выше средней."""
         avg_salary = self.get_avg_salary()
         with self.conn.cursor() as cur:
-            cur.execute(f"""
-                SELECT e.name, v.name, (v.salary_from + v.salary_to)/2 AS avg_salary, v.url
+            cur.execute("""
+                SELECT e.name, v.name, (v.salary_from + v.salary_to) / 2, v.url
                 FROM vacancies v
                 JOIN employers e ON v.employer_id = e.employer_id
-                WHERE (v.salary_from + v.salary_to)/2 > {avg_salary}
-            """)
+                WHERE (v.salary_from IS NOT NULL AND v.salary_to IS NOT NULL)
+                  AND ((v.salary_from + v.salary_to) / 2) > %s
+            """, (avg_salary,))
             return cur.fetchall()
 
     def get_vacancies_with_keyword(self, keyword: str) -> List[Tuple[str, str, Optional[int], Optional[int], str]]:
@@ -60,3 +60,14 @@ class DBManager:
                 WHERE v.name ILIKE '%{keyword}%';
             """)
             return cur.fetchall()
+
+    def close(self):
+        """Закрывает соединение."""
+        if self.conn:
+            self.conn.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()

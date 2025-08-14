@@ -16,34 +16,51 @@ EMPLOYER_IDS = [
 
 class HHParser:
     def __init__(self):
-        self.__url_employer = 'https://api.hh.ru/employers'
-        self.__url_vacancies = 'https://api.hh.ru/vacancies'
+        self.employer_url = 'https://api.hh.ru/employers'
+        self.vacancies_url = 'https://api.hh.ru/vacancies'
 
-    def get_employers(self):
-        """Получение  списка компания"""
-        params = {"sort_by": "by_vacancies_open", "per_page": 10}
+    def get_employer_info(self, employer_id: str) -> dict:
+        """Получает информацию о работодателе по ID."""
+        url = f"{self.employer_url}/{employer_id}"
         try:
-            response = requests.get(self.__url_employer, params=params)
+            response = requests.get(url)
             response.raise_for_status()
-            employers = response.json().get("items", [])
-            return [{"id": employer["id"], "name": employer["name"]} for employer in employers]
+            return response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Ошибка при запросе к API: {e}")
+            print(f"Ошибка при получении данных о работодателе {employer_id}: {e}")
+            return {}
+
+    def get_vacancies_by_employer(self, employer_id: str) -> list:
+        """Получает вакансии работодателя по ID."""
+        params = {"employer_id": employer_id, "per_page": 100}
+        try:
+            response = requests.get(self.vacancies_url, params=params)
+            response.raise_for_status()
+            return response.json().get("items", [])
+        except requests.exceptions.RequestException as e:
+            print(f"Ошибка при получении вакансий для {employer_id}: {e}")
             return []
 
-    def get_vacancies_by_employer(self, employer_id):
-        """Получение вакансий по id  компании"""
-        params = {"employer_id": employer_id, "per_page": 50}
-        response = requests.get(self.__url_vacancies, params=params).json()["items"]
-        return response
+    def get_all_employers(self) -> list:
+        """Возвращает список нужных работодателей."""
+        employers = []
+        for emp_id in EMPLOYER_IDS:
+            info = self.get_employer_info(emp_id)
+            if info:
+                employers.append({
+                    "id": info["id"],
+                    "name": info["name"],
+                    "open_vacancies": info.get("open_vacancies", 0)
+                })
+        return employers
 
-    def get_all_vacancies_by_employers(self):
-        """Получение всех ваканский"""
-        employers = self.get_employers()
+    def get_all_vacancies(self) -> list:
+        """Получает все вакансии для всех указанных работодателей."""
         all_vacancies = []
-        for employer in employers:
-            vacancies = self.get_vacancies_by_employer(employer["id"])
-            all_vacancies.extend([self.filter_vacancy(vacancy) for vacancy in vacancies])
+        for emp_id in EMPLOYER_IDS:
+            vacancies = self.get_vacancies_by_employer(emp_id)
+            for vacancy in vacancies:
+                all_vacancies.append(self.filter_vacancy(vacancy))
         return all_vacancies
 
     @staticmethod
@@ -59,18 +76,18 @@ class HHParser:
                 "alternate_url": vacancy["alternate_url"], "salary_from": salary_from, "salary_to": salary_to}
 
 
-hh = HHParser()
-print(hh.get_all_vacancies_by_employers())
-
-
 def get_employer_vacancies(employer_id: str) -> list:
     """
     Получает список вакансий для работодателя.
     :param employer_id: ID работодателя на HH
     :return: список вакансий
     """
-    url = "https://api.hh.ru/vacancies"
+    url = "https://api.hh.ru/vacancies"  # Убраны пробелы
     params = {"employer_id": employer_id}
-    response = requests.get(url, params=params)
-    response.raise_for_status()
-    return response.json()["items"]
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        return response.json()["items"]
+    except requests.exceptions.RequestException as e:
+        print(f"Ошибка при запросе к API: {e}")
+        return []
