@@ -11,7 +11,7 @@ class DBManager:
         """ получает список всех компаний и количество вакансий у каждой компании. """
 
         with self.conn.cursor() as cur:
-            cur.execute("SELECT name, open_vacancies FROM employers")
+            cur.execute("SELECT name, open_vacancies FROM vacancies")
             return cur.fetchall()
 
     def get_all_vacancies(self) -> List[Tuple[str, str, Optional[int], Optional[int], Optional[str], str]]:
