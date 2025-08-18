@@ -1,0 +1,6 @@
+[postgresql]
+DBNAME=
+USER=
+PASSWORD=
+PORT=
+HOST=
